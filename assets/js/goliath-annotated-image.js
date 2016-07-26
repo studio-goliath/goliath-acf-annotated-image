@@ -4,8 +4,8 @@
         var idx = 1;
         var animating = false;
         var hndShowAnimate;
-        var animTimeFade = 'slow';
-        var animTimeBetweenNotes = 1000;
+        var animTimeFade = 300;
+        var animTimeBetweenNotes = 300;
         var initiated = false;
 
         var displayRelatedTextarea = function($note) {
