@@ -30,17 +30,20 @@ This ACF field type is compatible with:
 1. Define your fields of type Annotated Image on ACF admin page
 2. To load scripts and css as needed on front, in your functions.php add :
 
-if (function_exists('gacfai_get_field')) {
-    wp_register_style('goliath-annotated-image', plugins_url() . "/goliath-acf-annotated-image/assets/css/goliath-annotated-image.css", array(), '1.0');
-    wp_register_script('goliath-annotated-image', plugins_url() . "/goliath-acf-annotated-image/assets/js/goliath-annotated-image.js", array('jquery'), '1.0');
+if (!is_admin()) {
+    if (function_exists('gacfai_get_field')) {
+        wp_register_style('goliath-annotated-image', plugins_url() . "/goliath-acf-annotated-image/assets/css/goliath-annotated-image.css", array(), '1.0');
+        wp_register_script('goliath-annotated-image', plugins_url() . "/goliath-acf-annotated-image/assets/js/goliath-annotated-image.js", array('jquery'), '1.0');
+    }
 }
 
 // Note that you can define here your custom path to your own css and js
 
 3. In your template, instead of get_field, use gacfai_get_field :
 
-echo gacfai_get_field('my-field-name', $post_id, 'thumbnail', false, '');
-
+if (function_exists('gacfai_get_field')) {
+    echo gacfai_get_field('my-field-name', $post_id, 'thumbnail', false, '');
+}
 
 == Changelog ==
 
