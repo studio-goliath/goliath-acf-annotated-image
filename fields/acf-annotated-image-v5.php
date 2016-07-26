@@ -105,7 +105,7 @@ if (!class_exists('acf_field_annotated_image')) :
                     <?php //acf_hidden_input(array( 'name' => $field['name'].'[notes]', 'value' => $field['value']['notes'], 'class' => 'notes-hidden-field' ));  ?>
                 </div>
                 <div class="view show-if-value acf-soh" <?php if ($size['width']) echo 'style="max-width: ' . $size['width'] . 'px"'; ?>>
-                    <img data-name="image" src="<?php echo $url; ?>" alt="<?php echo $alt; ?>" class="annotated-image editable" data-annotations='<?php echo ($field['value']['notes'])?json_encode($field['value']['notes']):''; ?>' data-fieldname="<?php echo $field['name']; ?>"/>
+                    <img data-name="image" src="<?php echo $url; ?>" alt="<?php echo $alt; ?>" class="annotated-image editable" data-annotations='<?php echo esc_attr(($field['value']['notes'])?json_encode($field['value']['notes']):''); ?>' data-fieldname="<?php echo $field['name']; ?>"/>
                     <ul class="acf-hl acf-soh-target">
             <?php if ($uploader != 'basic'): ?>
                             <li><a class="acf-icon -pencil dark" data-name="edit" href="#" title="<?php _e('Edit', 'acf'); ?>"></a></li>
