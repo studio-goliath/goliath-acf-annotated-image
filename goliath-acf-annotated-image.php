@@ -14,13 +14,15 @@
 if (!defined('ABSPATH'))
     exit;
 
-if (!class_exists('acf_plugin_annotated-image')) :
+if (!class_exists('acf_plugin_annotated_image')) :
 
     class acf_plugin_annotated_image
     {
 
         function __construct()
         {
+            include_once('helpers/helpers.php');
+
             $this->settings = array(
                 'version' => '1.0.0',
                 'url' => plugin_dir_url(__FILE__),
