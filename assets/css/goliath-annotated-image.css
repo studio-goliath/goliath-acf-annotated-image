@@ -16,6 +16,7 @@
   position: absolute;
   cursor: default;
 }
+
 .annotated-image span.note span.marker {
   content: "";
   display: block;
@@ -42,18 +43,10 @@
 .annotated-image span.note span.text:empty {
   display: none;
 }
-.annotated-image .textarea {
-  position: absolute;
-  left: 0;
-  top: 100%;
-  width: 100%;
-  z-index: 100;
-  line-height: 1.5em;
-  background: #fff;
+
+.annotated-image span.note.current span.marker{
+  border-top-color: orange;
 }
-.annotated-image .textarea textarea {
-  padding: 0;
-  width: calc(100% - 2px);
-  height: 3em;
-  text-align: center;
+.annotated-image span.note.current span.text{
+  background: orange;
 }
