@@ -4,6 +4,7 @@
   position: relative;
   width: 100%;
   height: auto;
+  margin-bottom: 20px;
 }
 .annotated-image.editable span.note {
   cursor: pointer;
@@ -49,4 +50,11 @@
 }
 .annotated-image span.note.current span.text{
   background: orange;
+}
+.annotated-image-wrapper .textarea .acf-input{
+
+}
+.annotated-image-wrapper textarea{
+  width: calc( 100% - 50px );
+  margin-right: 1em;
 }

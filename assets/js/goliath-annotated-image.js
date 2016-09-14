@@ -8,6 +8,97 @@
         var animTimeBetweenNotes = 300;
         var initiated = false;
 
+        // On set nos liceneur d'event
+        $( document )
+            .on({
+                keyup: function() {
+                    updateNoteText( $(this) );
+                },
+                focusin: function(){
+                    var noteId = $(this).data('note-id');
+                    $('#note-' + noteId).addClass('current');
+                },
+                focusout: function(){
+                    var noteId = $(this).data('note-id');
+                    $('#note-' + noteId).removeClass('current');
+                }
+            }, '.annotated-image-wrapper textarea');
+
+
+        $( document ).on( 'click', '.annotated-image-wrapper span.note' , function() {
+            displayRelatedTextarea($(this));
+        });
+
+        $( document ).on( 'click', '.annotated-image-wrapper .acf-icon.-cancel' , function( event ) {
+
+            if( $(this).data('name') == 'annotation-remove' ){
+
+                event.preventDefault();
+
+                var noteId = $(this).data('note-id');
+
+                console.log( noteId );
+                $(this).parents('.acf-field.textarea').remove();
+                $('#note-' + noteId ).remove();
+
+                // Il faut maintenant changer toutes les notes qui on un ID supérieur a celui que l'on supprime
+                do{
+                    var newId = noteId;
+                    noteId++;
+
+                    var nextAnnotationExist = changeAnnotationId( noteId, newId);
+
+
+                } while ( nextAnnotationExist );
+
+                // On place le prochain id en comptant les notes actuellement placé
+                idx = $( '.annotated-image-wrapper .note' ).length + 1;
+
+            }
+
+        });
+
+        var changeAnnotationId = function( oldId, newId){
+
+            var annotationExist = false;
+
+            var $noteToChange = $('#note-' + oldId );
+
+            if( $noteToChange.length > 0 ){
+
+                annotationExist = true;
+
+                $noteToChange.attr('id', 'note-' + newId );
+
+                var $textareaRelated = $('textarea[data-note-id="'+ oldId +'"]');
+                $textareaRelated.attr('data-note-id', newId );
+
+                var $deleteButton = $('a[data-note-id="'+ oldId +'"]');
+                $deleteButton.attr('data-note-id', newId );
+
+                // On remplace les name de tout les input
+                var $filedParents = $textareaRelated.parents('.acf-field.textarea');
+
+                $('input, textarea', $filedParents).each( function () {
+                    var name = $(this).attr('name');
+                    var newName = name.replace('[notes]['+ oldId +']', '[notes]['+ newId +']' );
+                    $(this).attr('name', newName );
+                })
+
+                // On remplace l'ID et le label
+                var id = $textareaRelated.attr('id');
+                var newAttrId = id.replace('notes_'+ oldId , 'notes_'+ newId );
+                $textareaRelated.attr('id', newAttrId );
+                $('label', $filedParents).attr('for', newAttrId );
+
+                $filedParents.find( '.note-id').html( newId );
+
+            }
+
+            return annotationExist;
+        };
+
+
         var displayRelatedTextarea = function($note) {
 
             if (initiated) {
@@ -15,30 +106,6 @@
                 var $relatedTextarea = $('textarea[data-note-id="'+ noteId +'"]');
                 $relatedTextarea.focus();
             }
-        };
-
-        var attachNoteEvents = function( $container) {
-            var $textarea = $container.find('textarea');
-            $textarea
-                .on({
-                    keyup: function() {
-                        updateNoteText( $(this) );
-                    },
-                    focusin: function(){
-                        var noteId = $(this).data('note-id');
-                        $('#note-' + noteId).addClass('current');
-                    },
-                    focusout: function(){
-                        var noteId = $(this).data('note-id');
-                        $('#note-' + noteId).removeClass('current');
-                    }
-                });
-
-
-            var $note = $container.find('span.note');
-            $note.click(function() {
-                displayRelatedTextarea($(this));
-            });
         };
 
         var updateNoteText = function( $textarea ) {
@@ -128,12 +195,13 @@
 
             var noteInputHtml = '';
 
+            noteInputHtml += '<div class="acf-field textarea">';
             noteInputHtml += '<input type="hidden" name="' + fieldName + '[notes][' + idx.toString() + '][x]" value="' + relX.toString() + '" />';
             noteInputHtml += '<input type="hidden" name="' + fieldName + '[notes][' + idx.toString() + '][y]" value="' + relY.toString() + '" />';
-            noteInputHtml += '<div class="textarea">';
             noteInputHtml += '<div class="acf-label"><label for="' + fieldName + '_notes_' + idx.toString() + '_text">Texte de la note n°<span class="note-id">'+ idx +'</span></label></div>';
             noteInputHtml += '<div class="acf-input">';
             noteInputHtml += '<textarea id="' + fieldName + '_notes_' + idx.toString() + '_text" name="' + fieldName + '[notes][' + idx.toString() + '][t]" class="note-input" data-note-id="'+ idx +'">' + text + '</textarea>';
+            noteInputHtml += '<a class="acf-icon -cancel" data-name="annotation-remove" data-note-id="'+ idx +'" href="#" title="Remove"></a>';
             noteInputHtml += '</div>';
             noteInputHtml += '</div>';
 
@@ -165,8 +233,6 @@
                         addInputNote($container, note.x, note.y, note.t, i);
                     }
                 }
-
-                attachNoteEvents( $container);
             }
 
             idx = Object.keys(notes).length + 1;
@@ -211,7 +277,6 @@
                     var relY = (e.pageY - parentOffset.top) / $image.height() * 100;
                     addInputNote($container, relX, relY, '', idx);
                     addNote($container, relX, relY, '', idx);
-                    attachNoteEvents( $container);
                     idx++;
                 });
             } else {
