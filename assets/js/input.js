@@ -67,6 +67,7 @@
 
             }
 
+
         },
 
 
@@ -155,8 +156,6 @@
                 alt: data.alt,
                 title: data.title
             });
-
-            this.$img.annotatedImage();
 
 
             // vars
@@ -284,6 +283,7 @@
                     // render
                     self.set('$field', $field).render( attachment );
 
+
                 }
 
             });
@@ -392,9 +392,6 @@
 
         // find a specific field
         $('img.annotated-image').annotatedImage();
-
-
-        // do something to $field
 
     });
 

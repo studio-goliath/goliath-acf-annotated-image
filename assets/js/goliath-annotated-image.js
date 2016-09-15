@@ -1,8 +1,6 @@
 (function($) {
     $.fn.annotatedImage = function() {
-        var fieldName = 'notes';
         var animating = false;
-        var idx = 0;
         var hndShowAnimate;
         var animTimeFade = 300;
         var animTimeBetweenNotes = 300;
@@ -15,11 +13,11 @@
                     updateNoteText( $(this) );
                 },
                 focusin: function(){
-                    var noteId = $(this).data('note-id');
+                    var noteId =  this.dataset.noteId;
                     $('#note-' + noteId).addClass('current');
                 },
                 focusout: function(){
-                    var noteId = $(this).data('note-id');
+                    var noteId =  this.dataset.noteId;
                     $('#note-' + noteId).removeClass('current');
                 }
             }, '.annotated-image-wrapper textarea');
@@ -37,26 +35,41 @@
 
                 var noteId = $(this).data('note-id');
 
-                console.log( noteId );
                 $(this).parents('.acf-field.textarea').remove();
                 $('#note-' + noteId ).remove();
 
                 // Il faut maintenant changer toutes les notes qui on un ID supérieur a celui que l'on supprime
                 do{
                     var newId = noteId;
-                    noteId++;
+
+                    var intId = noteId.substring( ( noteId.lastIndexOf('-') + 1 ) );
+                    noteId = noteId.substring( 0, ( noteId.lastIndexOf('-') + 1 ) ) + ( ++intId );
 
                     var nextAnnotationExist = changeAnnotationId( noteId, newId);
 
-
                 } while ( nextAnnotationExist );
 
-                // On place le prochain id en comptant les notes actuellement placé
-                idx = $( '.annotated-image-wrapper .note' ).length + 1;
-
             }
-
         });
+
+        // On ajoute une note en cliquant sur l'image
+        $( document ).on( 'click', '.annotated-image-wrapper.editable .annotated-image img' , function( e ) {
+
+            var $image = $( this );
+            var $container = $(this).parents( '.annotated-image-wrapper' );
+
+
+            var idx = $( '.note', $container ).length + 1;
+
+            var parentOffset = $image.offset();
+            var relX = (e.pageX - parentOffset.left) / $image.width() * 100;
+            var relY = (e.pageY - parentOffset.top) / $image.height() * 100;
+
+            var fieldName = $container.data('fieldname');
+
+            addInputNote($container, relX, relY, '', idx, fieldName);
+            addNote($container, relX, relY, '', idx, fieldName);
+        } );
 
         var changeAnnotationId = function( oldId, newId){
 
@@ -67,6 +80,9 @@
             if( $noteToChange.length > 0 ){
 
                 annotationExist = true;
+
+                var intOldId = oldId.substring( ( oldId.lastIndexOf('-') + 1 ) );
+                var intNewId = newId.substring( ( newId.lastIndexOf('-') + 1 ) );
 
                 $noteToChange.attr('id', 'note-' + newId );
 
@@ -81,17 +97,18 @@
 
                 $('input, textarea', $filedParents).each( function () {
                     var name = $(this).attr('name');
-                    var newName = name.replace('[notes]['+ oldId +']', '[notes]['+ newId +']' );
+                    var newName = name.replace('[notes]['+ intOldId +']', '[notes]['+ intNewId +']' );
                     $(this).attr('name', newName );
                 })
 
                 // On remplace l'ID et le label
                 var id = $textareaRelated.attr('id');
-                var newAttrId = id.replace('notes_'+ oldId , 'notes_'+ newId );
+                var newAttrId = id.replace('notes_'+ intOldId , 'notes_'+ intNewId );
                 $textareaRelated.attr('id', newAttrId );
                 $('label', $filedParents).attr('for', newAttrId );
 
-                $filedParents.find( '.note-id').html( newId );
+                var labelId = newId.substring( newId.lastIndexOf('-') + 1 );
+                $filedParents.find( '.note-id').html( labelId );
 
             }
 
@@ -110,21 +127,21 @@
 
         var updateNoteText = function( $textarea ) {
 
-
             var text = $textarea.val();
             var noteId = $textarea.data('note-id');
             var $note = $('#note-' + noteId + ' .text' );
 
             $note.html((text)?text.replace(/\n/g, "<br />"):'');
-            $note.css('margin-left', (-Math.ceil($note.width() / 2)).toString() + 'px');
         };
 
-        var getNoteHtml = function( relX, relY, text, id) {
+        var getNoteHtml = function( relX, relY, text, id, fieldname) {
             var noteHtml = '';
 
-            noteHtml = noteHtml + '<span class="note" id="note-'+ id +'" style="left:' + relX.toString() + '%; top:' + relY.toString() + '%">';
+            var sanitizedFieldName = sanitizedId( fieldname );
+
+            noteHtml = noteHtml + '<span class="note" id="note-'+ sanitizedFieldName +'-' + id + '" style="left:' + relX.toString() + '%; top:' + relY.toString() + '%">';
             noteHtml = noteHtml + '<span class="marker"></span>';
-            noteHtml = noteHtml + '<span class="text"></span>';
+            noteHtml = noteHtml + '<span class="text">'+text+'</span>';
             noteHtml = noteHtml + '</span>';
 
             var $noteHtml = $(noteHtml);
@@ -132,9 +149,9 @@
             return $noteHtml;
         };
 
-        var addNote = function($container, relX, relY, text, id) {
+        var addNote = function($container, relX, relY, text, id, fieldname) {
 
-            var $noteHtml = getNoteHtml( relX, relY, text, id);
+            var $noteHtml = getNoteHtml( relX, relY, text, id, fieldname);
 
             $('.annotated-image', $container).append($noteHtml);
 
@@ -191,17 +208,18 @@
             });
         };
 
-        var addInputNote = function( $container, relX, relY, text, idx ){
+        var addInputNote = function( $container, relX, relY, text, idx, fieldName ){
 
             var noteInputHtml = '';
 
+            var sanitizedFieldName = sanitizedId( fieldName );
             noteInputHtml += '<div class="acf-field textarea">';
             noteInputHtml += '<input type="hidden" name="' + fieldName + '[notes][' + idx.toString() + '][x]" value="' + relX.toString() + '" />';
             noteInputHtml += '<input type="hidden" name="' + fieldName + '[notes][' + idx.toString() + '][y]" value="' + relY.toString() + '" />';
             noteInputHtml += '<div class="acf-label"><label for="' + fieldName + '_notes_' + idx.toString() + '_text">Texte de la note n°<span class="note-id">'+ idx +'</span></label></div>';
             noteInputHtml += '<div class="acf-input">';
-            noteInputHtml += '<textarea id="' + fieldName + '_notes_' + idx.toString() + '_text" name="' + fieldName + '[notes][' + idx.toString() + '][t]" class="note-input" data-note-id="'+ idx +'">' + text + '</textarea>';
-            noteInputHtml += '<a class="acf-icon -cancel" data-name="annotation-remove" data-note-id="'+ idx +'" href="#" title="Remove"></a>';
+            noteInputHtml += '<textarea id="' + fieldName + '_notes_' + idx.toString() + '_text" name="' + fieldName + '[notes][' + idx.toString() + '][t]" class="note-input" data-note-id="'+ sanitizedFieldName +'-' + idx  +'">' + text + '</textarea>';
+            noteInputHtml += '<a class="acf-icon -cancel" data-name="annotation-remove" data-note-id="'+ sanitizedFieldName +'-' + idx +'" href="#" title="Remove"></a>';
             noteInputHtml += '</div>';
             noteInputHtml += '</div>';
 
@@ -216,10 +234,16 @@
                 notes = false;
             }
 
+            var fieldname = 'note';
+            var containeFieldName = $container.data('fieldname');
+            if( typeof containeFieldName != 'undefined' ){
+                fieldname = containeFieldName
+            }
+
             for (var i in notes) {
                 if (notes.hasOwnProperty(i)) {
                     var note = notes[i];
-                    addNote($container, note.x, note.y, note.t, i);
+                    addNote($container, note.x, note.y, note.t, i, fieldname);
                 }
             }
 
@@ -230,13 +254,17 @@
                 for ( i in notes) {
                     if (notes.hasOwnProperty(i)) {
                         note = notes[i];
-                        addInputNote($container, note.x, note.y, note.t, i);
+                        addInputNote($container, note.x, note.y, note.t, i, fieldname);
                     }
                 }
             }
 
-            idx = Object.keys(notes).length + 1;
         };
+
+        var sanitizedId = function( fieldName ){
+
+            return fieldName.replace( /(\[|])/g, '-' );
+        }
 
         return this.each(function() {
 
@@ -253,9 +281,6 @@
                 $container.attr( 'data-' + dataName, $image.attr( 'data-' + dataName ) );
             }
 
-            if ($container.data('fieldname')) {
-                fieldName = $container.data('fieldname');
-            }
 
             $image.attr('class', null);
             $image.attr('data-annotations', null);
@@ -269,17 +294,8 @@
 
             loadData($container);
 
-            if ($container.hasClass('editable')) {
+            if( ! $container.hasClass('editable')) {
 
-                $image.click(function(e) {
-                    var parentOffset = $image.offset();
-                    var relX = (e.pageX - parentOffset.left) / $image.width() * 100;
-                    var relY = (e.pageY - parentOffset.top) / $image.height() * 100;
-                    addInputNote($container, relX, relY, '', idx);
-                    addNote($container, relX, relY, '', idx);
-                    idx++;
-                });
-            } else {
                 animateNotes($container);
             }
 
