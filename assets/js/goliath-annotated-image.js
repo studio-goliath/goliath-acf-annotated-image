@@ -22,7 +22,6 @@
                 }
             }, '.annotated-image-wrapper textarea');
 
-
         $( document ).on( 'click', '.annotated-image-wrapper span.note' , function() {
             displayRelatedTextarea($(this));
         });
@@ -71,6 +70,12 @@
             addNote($container, relX, relY, '', idx, fieldName);
         } );
 
+        var syncContainerSizeWithImgSize = function($container) {
+            var $img = $container.find('img');
+            $container.width($img.width());
+            $container.height($img.height());
+        };
+
         var changeAnnotationId = function( oldId, newId){
 
             var annotationExist = false;
@@ -114,7 +119,6 @@
 
             return annotationExist;
         };
-
 
         var displayRelatedTextarea = function($note) {
 
@@ -281,7 +285,6 @@
                 $container.attr( 'data-' + dataName, $image.attr( 'data-' + dataName ) );
             }
 
-
             $image.attr('class', null);
             $image.attr('data-annotations', null);
             $image.attr('data-fieldname', null);
@@ -295,9 +298,13 @@
             loadData($container);
 
             if( ! $container.hasClass('editable')) {
-
                 animateNotes($container);
             }
+
+            $(window).resize(function() {
+                syncContainerSizeWithImgSize($container);
+            });
+            syncContainerSizeWithImgSize($container);
 
             initiated = true;
         });
