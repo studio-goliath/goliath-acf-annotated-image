@@ -304,7 +304,12 @@
             $(window).resize(function() {
                 syncContainerSizeWithImgSize($container);
             });
-            syncContainerSizeWithImgSize($container);
+            $image.load(function() {
+                syncContainerSizeWithImgSize($container);
+            });
+            if ($image.get(0).complete) {
+                syncContainerSizeWithImgSize($container);
+            }
 
             initiated = true;
         });
