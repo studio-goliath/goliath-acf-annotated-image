@@ -38,15 +38,17 @@ if (!function_exists('gacfai_get_field')) {
 
     function gacfai_get_field($selector, $post_id=false, $size = 'thumbnail', $icon=false, $attr='')
     {
-        $field = get_field($selector, $post_id);
-
+        if(function_exists('get_field')) {
+            $field = get_field($selector, $post_id);
+        }
         return gacfai_get_image($field, $size, $icon, $attr);
     }
 
     function gacfai_get_sub_field($selector, $post_id=false, $size = 'thumbnail', $icon=false, $attr='')
     {
-        $field = get_sub_field($selector, $post_id);
-
+        if(function_exists('get_sub_field')) {
+            $field = get_sub_field($selector, $post_id);
+        }
         return gacfai_get_image($field, $size, $icon, $attr);
     }
 }
